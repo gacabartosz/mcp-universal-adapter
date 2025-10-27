@@ -1,28 +1,29 @@
 """OpenAPI 3.x parser implementation."""
 
 import json
-import yaml
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Union
+from typing import Any
+
 import httpx
+import yaml
 
 from mcp_adapter.models import (
-    NormalizedAPISpec,
-    Endpoint,
-    Parameter,
-    ParameterLocation,
-    HTTPMethod,
     AuthConfig,
     AuthType,
-    SchemaModel,
+    Endpoint,
+    HTTPMethod,
+    NormalizedAPISpec,
+    Parameter,
+    ParameterLocation,
     PropertySchema,
+    SchemaModel,
     ServerConfig,
 )
 from mcp_adapter.parsers.base import (
     BaseParser,
     ParserError,
-    ParserValidationError,
     ParserNetworkError,
+    ParserValidationError,
 )
 
 
@@ -36,9 +37,9 @@ class OpenAPIParser(BaseParser):
     - URL or file path sources
     """
 
-    def __init__(self, source: Union[str, Path]):
+    def __init__(self, source: str | Path):
         super().__init__(source)
-        self.spec: Optional[Dict[str, Any]] = None
+        self.spec: dict[str, Any] | None = None
 
     async def parse(self) -> NormalizedAPISpec:
         """Parse OpenAPI specification."""
@@ -48,6 +49,9 @@ class OpenAPIParser(BaseParser):
         # 2. Validate it's OpenAPI
         if not self.validate():
             raise ParserValidationError(f"Invalid OpenAPI specification: {self.source}")
+
+        # Type assertion: validate() ensures self.spec is not None
+        assert self.spec is not None
 
         # 3. Extract components
         info = self.spec.get("info", {})
@@ -68,8 +72,10 @@ class OpenAPIParser(BaseParser):
             contact=info.get("contact"),
             license=info.get("license"),
             external_docs=self.spec.get("externalDocs", {}).get("url"),
-            tags=[{"name": t.get("name", ""), "description": t.get("description", "")}
-                  for t in self.spec.get("tags", [])],
+            tags=[
+                {"name": t.get("name", ""), "description": t.get("description", "")}
+                for t in self.spec.get("tags", [])
+            ],
             source_format="openapi",
             source_url=self.source if self.is_url(self.source) else None,
             base_url=servers[0].url if servers else None,
@@ -92,7 +98,7 @@ class OpenAPIParser(BaseParser):
                         self.spec = yaml.safe_load(response.text)
 
             except httpx.HTTPError as e:
-                raise ParserNetworkError(f"Failed to fetch OpenAPI spec: {e}")
+                raise ParserNetworkError(f"Failed to fetch OpenAPI spec: {e}") from e
 
         elif self.is_file(self.source):
             # Load from file
@@ -111,7 +117,7 @@ class OpenAPIParser(BaseParser):
                     except json.JSONDecodeError:
                         self.spec = yaml.safe_load(content)
             except Exception as e:
-                raise ParserError(f"Failed to parse file: {e}")
+                raise ParserError(f"Failed to parse file: {e}") from e
         else:
             raise ParserError(f"Source not found: {self.source}")
 
@@ -134,8 +140,9 @@ class OpenAPIParser(BaseParser):
 
         return True
 
-    def _extract_servers(self) -> List[ServerConfig]:
+    def _extract_servers(self) -> list[ServerConfig]:
         """Extract server configurations."""
+        assert self.spec is not None
         servers = []
         for server in self.spec.get("servers", []):
             servers.append(
@@ -147,8 +154,9 @@ class OpenAPIParser(BaseParser):
             )
         return servers
 
-    def _extract_endpoints(self) -> List[Endpoint]:
+    def _extract_endpoints(self) -> list[Endpoint]:
         """Extract all API endpoints from paths."""
+        assert self.spec is not None
         endpoints = []
         paths = self.spec.get("paths", {})
 
@@ -164,9 +172,7 @@ class OpenAPIParser(BaseParser):
 
         return endpoints
 
-    def _build_endpoint(
-        self, path: str, method: str, operation: Dict[str, Any]
-    ) -> Endpoint:
+    def _build_endpoint(self, path: str, method: str, operation: dict[str, Any]) -> Endpoint:
         """Build Endpoint model from OpenAPI operation."""
         # Extract parameters
         parameters = []
@@ -200,7 +206,7 @@ class OpenAPIParser(BaseParser):
             external_docs=operation.get("externalDocs", {}).get("url"),
         )
 
-    def _build_parameter(self, param: Dict[str, Any]) -> Parameter:
+    def _build_parameter(self, param: dict[str, Any]) -> Parameter:
         """Build Parameter model from OpenAPI parameter."""
         location_map = {
             "query": ParameterLocation.QUERY,
@@ -219,15 +225,17 @@ class OpenAPIParser(BaseParser):
             description=param.get("description"),
             required=param.get("required", False),
             default=schema.get("default"),
-            schema=self._build_property_schema(param.get("name", ""), schema),
+            param_schema=self._build_property_schema(param.get("name", ""), schema),  # type: ignore[call-arg]
             example=param.get("example") or schema.get("example"),
         )
 
-    def _build_request_body(self, request_body: Dict[str, Any]) -> SchemaModel:
+    def _build_request_body(self, request_body: dict[str, Any]) -> SchemaModel | None:
         """Build SchemaModel from OpenAPI requestBody."""
         content = request_body.get("content", {})
         # Try application/json first
-        media_type = content.get("application/json") or content.get("application/x-www-form-urlencoded")
+        media_type = content.get("application/json") or content.get(
+            "application/x-www-form-urlencoded"
+        )
 
         if not media_type:
             return None
@@ -235,7 +243,7 @@ class OpenAPIParser(BaseParser):
         schema = media_type.get("schema", {})
         return self._build_schema_model("RequestBody", schema)
 
-    def _build_response_schema(self, response: Dict[str, Any]) -> Optional[SchemaModel]:
+    def _build_response_schema(self, response: dict[str, Any]) -> SchemaModel | None:
         """Build SchemaModel from OpenAPI response."""
         content = response.get("content", {})
         media_type = content.get("application/json")
@@ -246,7 +254,7 @@ class OpenAPIParser(BaseParser):
         schema = media_type.get("schema", {})
         return self._build_schema_model("Response", schema)
 
-    def _build_schema_model(self, name: str, schema: Dict[str, Any]) -> SchemaModel:
+    def _build_schema_model(self, name: str, schema: dict[str, Any]) -> SchemaModel:
         """Build SchemaModel from OpenAPI schema."""
         properties = {}
         for prop_name, prop_schema in schema.get("properties", {}).items():
@@ -260,9 +268,7 @@ class OpenAPIParser(BaseParser):
             example=schema.get("example"),
         )
 
-    def _build_property_schema(
-        self, name: str, schema: Dict[str, Any]
-    ) -> PropertySchema:
+    def _build_property_schema(self, name: str, schema: dict[str, Any]) -> PropertySchema:
         """Build PropertySchema from OpenAPI schema."""
         prop_type = schema.get("type", "string")
 
@@ -297,8 +303,9 @@ class OpenAPIParser(BaseParser):
             example=schema.get("example"),
         )
 
-    def _extract_auth(self) -> Optional[AuthConfig]:
+    def _extract_auth(self) -> AuthConfig | None:
         """Extract authentication configuration."""
+        assert self.spec is not None
         security_schemes = self.spec.get("components", {}).get("securitySchemes", {})
 
         if not security_schemes:
@@ -344,8 +351,9 @@ class OpenAPIParser(BaseParser):
 
         return None
 
-    def _extract_schemas(self) -> Dict[str, SchemaModel]:
+    def _extract_schemas(self) -> dict[str, SchemaModel]:
         """Extract data schemas from components."""
+        assert self.spec is not None
         schemas = {}
         components = self.spec.get("components", {}).get("schemas", {})
 

@@ -1,17 +1,14 @@
 """Python MCP server generator."""
 
-import os
 from pathlib import Path
-from typing import Dict, Any
+
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 
-from mcp_adapter.models import (
-    NormalizedAPISpec,
-    AuthType,
-    ParameterLocation,
-    HTTPMethod,
-)
 from mcp_adapter.generators.base import BaseGenerator, GeneratorError
+from mcp_adapter.models import (
+    AuthType,
+    NormalizedAPISpec,
+)
 
 
 class PythonGenerator(BaseGenerator):
@@ -103,7 +100,7 @@ class PythonGenerator(BaseGenerator):
         template = self.env.get_template("README.md.jinja2")
 
         # Group endpoints by tag
-        endpoints_by_tag: Dict[str, list] = {}
+        endpoints_by_tag: dict[str, list] = {}
         for endpoint in self.api_spec.endpoints:
             tag = endpoint.tags[0] if endpoint.tags else "General"
             if tag not in endpoints_by_tag:

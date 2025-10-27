@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Union
+
 from mcp_adapter.models import NormalizedAPISpec
 
 
@@ -14,7 +14,7 @@ class BaseParser(ABC):
     the unified NormalizedAPISpec format.
     """
 
-    def __init__(self, source: Union[str, Path]):
+    def __init__(self, source: str | Path):
         """Initialize parser with source.
 
         Args:

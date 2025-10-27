@@ -1,18 +1,20 @@
 """Unit tests for Python MCP server generator."""
 
-import pytest
-from pathlib import Path
 import tempfile
-import shutil
-from mcp_adapter.parsers import OpenAPIParser
+from pathlib import Path
+
+import pytest
 from mcp_adapter.generators import PythonGenerator
+from mcp_adapter.parsers import OpenAPIParser
 
 
 @pytest.mark.asyncio
 async def test_generator_creates_files():
     """Test that generator creates all required files."""
     # Parse Pet Store
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -34,7 +36,9 @@ async def test_generator_creates_files():
 async def test_generated_server_syntax():
     """Test that generated server.py has valid Python syntax."""
     # Parse Pet Store
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -56,7 +60,9 @@ async def test_generated_server_syntax():
 async def test_generated_server_contains_tools():
     """Test that generated server contains all tools."""
     # Parse Pet Store
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -71,13 +77,17 @@ async def test_generated_server_contains_tools():
         # Check that all endpoints have corresponding functions
         for endpoint in spec.endpoints:
             tool_name = endpoint.tool_name
-            assert f"async def {tool_name}(" in server_code, f"Function {tool_name} not found in generated server"
+            assert (
+                f"async def {tool_name}(" in server_code
+            ), f"Function {tool_name} not found in generated server"
 
 
 @pytest.mark.asyncio
 async def test_generated_server_has_auth():
     """Test that generated server includes authentication handling."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -101,7 +111,9 @@ async def test_generated_server_has_auth():
 @pytest.mark.asyncio
 async def test_generated_pyproject_valid():
     """Test that generated pyproject.toml is valid."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -124,7 +136,9 @@ async def test_generated_pyproject_valid():
 @pytest.mark.asyncio
 async def test_generated_readme_complete():
     """Test that generated README has all sections."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -147,7 +161,9 @@ async def test_generated_readme_complete():
 @pytest.mark.asyncio
 async def test_generated_env_example():
     """Test that .env.example contains correct variables."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 

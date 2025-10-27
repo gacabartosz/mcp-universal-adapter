@@ -1,6 +1,6 @@
 """API parsers for different specification formats."""
 
-from .base import BaseParser, ParserError, ParserValidationError, ParserNetworkError
+from .base import BaseParser, ParserError, ParserNetworkError, ParserValidationError
 from .openapi import OpenAPIParser
 
 # from .graphql import GraphQLParser

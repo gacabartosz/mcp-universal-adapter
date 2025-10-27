@@ -1,16 +1,19 @@
 """Unit tests for OpenAPI parser."""
 
-import pytest
 from pathlib import Path
-from mcp_adapter.parsers import OpenAPIParser, ParserValidationError
-from mcp_adapter.models import HTTPMethod, AuthType, ParameterLocation
+
+import pytest
+from mcp_adapter.models import AuthType, HTTPMethod, ParameterLocation
+from mcp_adapter.parsers import OpenAPIParser
 
 
 @pytest.mark.asyncio
 async def test_parse_petstore_yaml():
     """Test parsing Pet Store OpenAPI YAML file."""
     # Get path to test file
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
 
     # Parse
     parser = OpenAPIParser(str(test_file))
@@ -38,7 +41,9 @@ async def test_parse_petstore_yaml():
 @pytest.mark.asyncio
 async def test_parser_validates_spec():
     """Test that parser validates OpenAPI specification."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
 
     await parser.parse()
@@ -48,7 +53,9 @@ async def test_parser_validates_spec():
 @pytest.mark.asyncio
 async def test_endpoint_tool_name_generation():
     """Test that endpoint tool names are generated correctly."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
@@ -56,7 +63,9 @@ async def test_endpoint_tool_name_generation():
     list_endpoint = spec.get_endpoint_by_name("listPets")
     if not list_endpoint:
         # Try alternative naming
-        list_endpoint = next((e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.GET), None)
+        list_endpoint = next(
+            (e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.GET), None
+        )
 
     assert list_endpoint is not None
     assert list_endpoint.method == HTTPMethod.GET
@@ -66,12 +75,16 @@ async def test_endpoint_tool_name_generation():
 @pytest.mark.asyncio
 async def test_endpoint_parameters():
     """Test that endpoint parameters are parsed correctly."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
     # Find list_pets endpoint
-    list_endpoint = next((e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.GET), None)
+    list_endpoint = next(
+        (e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.GET), None
+    )
     assert list_endpoint is not None
 
     # Check query parameters
@@ -88,12 +101,17 @@ async def test_endpoint_parameters():
 @pytest.mark.asyncio
 async def test_path_parameters():
     """Test that path parameters are parsed correctly."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
     # Find get_pet endpoint (GET /pets/{petId})
-    get_endpoint = next((e for e in spec.endpoints if e.path == "/pets/{petId}" and e.method == HTTPMethod.GET), None)
+    get_endpoint = next(
+        (e for e in spec.endpoints if e.path == "/pets/{petId}" and e.method == HTTPMethod.GET),
+        None,
+    )
     assert get_endpoint is not None
 
     # Check path parameters
@@ -107,12 +125,16 @@ async def test_path_parameters():
 @pytest.mark.asyncio
 async def test_request_body():
     """Test that request body is parsed correctly."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     spec = await parser.parse()
 
     # Find create_pet endpoint (POST /pets)
-    create_endpoint = next((e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.POST), None)
+    create_endpoint = next(
+        (e for e in spec.endpoints if e.path == "/pets" and e.method == HTTPMethod.POST), None
+    )
     assert create_endpoint is not None
 
     # Check request body
@@ -132,7 +154,9 @@ def test_parser_is_url():
 
 def test_parser_is_file():
     """Test file detection."""
-    test_file = Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    test_file = (
+        Path(__file__).parent.parent.parent / "examples" / "demo_petstore" / "petstore-openapi.yaml"
+    )
     parser = OpenAPIParser(str(test_file))
     assert parser.is_file(str(test_file)) is True
     assert parser.is_file("nonexistent.yaml") is False

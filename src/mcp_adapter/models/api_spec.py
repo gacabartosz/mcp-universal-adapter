@@ -5,8 +5,9 @@ This provides a consistent interface for generators regardless of source format.
 """
 
 from enum import Enum
-from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, Field, HttpUrl
+from typing import Any, Optional
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class HTTPMethod(str, Enum):
@@ -47,42 +48,44 @@ class PropertySchema(BaseModel):
 
     name: str
     type: str  # string, number, integer, boolean, array, object
-    description: Optional[str] = None
+    description: str | None = None
     required: bool = False
-    default: Optional[Any] = None
-    enum: Optional[List[Any]] = None
-    format: Optional[str] = None  # email, date-time, uri, etc.
-    pattern: Optional[str] = None
-    min_length: Optional[int] = None
-    max_length: Optional[int] = None
-    minimum: Optional[float] = None
-    maximum: Optional[float] = None
+    default: Any | None = None
+    enum: list[Any] | None = None
+    format: str | None = None  # email, date-time, uri, etc.
+    pattern: str | None = None
+    min_length: int | None = None
+    max_length: int | None = None
+    minimum: float | None = None
+    maximum: float | None = None
     items: Optional["PropertySchema"] = None  # For arrays
-    properties: Optional[Dict[str, "PropertySchema"]] = None  # For objects
-    example: Optional[Any] = None
+    properties: dict[str, "PropertySchema"] | None = None  # For objects
+    example: Any | None = None
 
 
 class SchemaModel(BaseModel):
     """Request or response schema."""
 
     name: str
-    description: Optional[str] = None
-    properties: Dict[str, PropertySchema] = Field(default_factory=dict)
-    required: List[str] = Field(default_factory=list)
-    example: Optional[Dict[str, Any]] = None
+    description: str | None = None
+    properties: dict[str, PropertySchema] = Field(default_factory=dict)
+    required: list[str] = Field(default_factory=list)
+    example: dict[str, Any] | None = None
 
 
 class Parameter(BaseModel):
     """API parameter (query, path, header, or body)."""
 
+    model_config = ConfigDict(populate_by_name=True)
+
     name: str
     location: ParameterLocation
     type: str  # Python type hint string
-    description: Optional[str] = None
+    description: str | None = None
     required: bool = False
-    default: Optional[Any] = None
-    schema: Optional[PropertySchema] = None  # Detailed schema
-    example: Optional[Any] = None
+    default: Any | None = None
+    param_schema: PropertySchema | None = Field(default=None, alias="schema")  # Detailed schema
+    example: Any | None = None
 
 
 class Endpoint(BaseModel):
@@ -91,22 +94,22 @@ class Endpoint(BaseModel):
     # Basic info
     path: str  # /api/users/{id}
     method: HTTPMethod
-    operation_id: Optional[str] = None  # Unique identifier
-    summary: Optional[str] = None  # Short description
-    description: Optional[str] = None  # Long description
-    tags: List[str] = Field(default_factory=list)  # Categories/groups
+    operation_id: str | None = None  # Unique identifier
+    summary: str | None = None  # Short description
+    description: str | None = None  # Long description
+    tags: list[str] = Field(default_factory=list)  # Categories/groups
 
     # Parameters
-    parameters: List[Parameter] = Field(default_factory=list)
-    request_body: Optional[SchemaModel] = None
+    parameters: list[Parameter] = Field(default_factory=list)
+    request_body: SchemaModel | None = None
 
     # Response
-    response_schema: Optional[SchemaModel] = None
-    response_examples: Dict[str, Any] = Field(default_factory=dict)
+    response_schema: SchemaModel | None = None
+    response_examples: dict[str, Any] = Field(default_factory=dict)
 
     # Additional metadata
     deprecated: bool = False
-    external_docs: Optional[str] = None
+    external_docs: str | None = None
 
     @property
     def tool_name(self) -> str:
@@ -139,17 +142,17 @@ class Endpoint(BaseModel):
         return f"{prefix}_{resource}".lower()
 
     @property
-    def path_parameters(self) -> List[Parameter]:
+    def path_parameters(self) -> list[Parameter]:
         """Get only path parameters."""
         return [p for p in self.parameters if p.location == ParameterLocation.PATH]
 
     @property
-    def query_parameters(self) -> List[Parameter]:
+    def query_parameters(self) -> list[Parameter]:
         """Get only query parameters."""
         return [p for p in self.parameters if p.location == ParameterLocation.QUERY]
 
     @property
-    def header_parameters(self) -> List[Parameter]:
+    def header_parameters(self) -> list[Parameter]:
         """Get only header parameters."""
         return [p for p in self.parameters if p.location == ParameterLocation.HEADER]
 
@@ -160,21 +163,21 @@ class AuthConfig(BaseModel):
     type: AuthType
     name: str = "auth"  # Parameter name for API key
     location: ParameterLocation = ParameterLocation.HEADER  # For API key
-    scheme: Optional[str] = None  # For HTTP auth (Bearer, Basic)
-    description: Optional[str] = None
+    scheme: str | None = None  # For HTTP auth (Bearer, Basic)
+    description: str | None = None
 
     # OAuth2 specific
-    authorization_url: Optional[str] = None
-    token_url: Optional[str] = None
-    scopes: Dict[str, str] = Field(default_factory=dict)
+    authorization_url: str | None = None
+    token_url: str | None = None
+    scopes: dict[str, str] = Field(default_factory=dict)
 
 
 class ServerConfig(BaseModel):
     """API server configuration."""
 
     url: str
-    description: Optional[str] = None
-    variables: Dict[str, str] = Field(default_factory=dict)
+    description: str | None = None
+    variables: dict[str, str] = Field(default_factory=dict)
 
 
 class NormalizedAPISpec(BaseModel):
@@ -187,44 +190,44 @@ class NormalizedAPISpec(BaseModel):
     # Metadata
     name: str
     version: str = "1.0.0"
-    description: Optional[str] = None
-    base_url: Optional[str] = None
+    description: str | None = None
+    base_url: str | None = None
 
     # Servers
-    servers: List[ServerConfig] = Field(default_factory=list)
+    servers: list[ServerConfig] = Field(default_factory=list)
 
     # Endpoints
-    endpoints: List[Endpoint] = Field(default_factory=list)
+    endpoints: list[Endpoint] = Field(default_factory=list)
 
     # Authentication
-    auth: Optional[AuthConfig] = None
+    auth: AuthConfig | None = None
 
     # Data models
-    schemas: Dict[str, SchemaModel] = Field(default_factory=dict)
+    schemas: dict[str, SchemaModel] = Field(default_factory=dict)
 
     # Additional metadata
-    contact: Optional[Dict[str, str]] = None
-    license: Optional[Dict[str, str]] = None
-    external_docs: Optional[str] = None
-    tags: List[Dict[str, str]] = Field(default_factory=list)
+    contact: dict[str, str] | None = None
+    license: dict[str, str] | None = None
+    external_docs: str | None = None
+    tags: list[dict[str, str]] = Field(default_factory=list)
 
     # Source info
     source_format: str = "unknown"  # openapi, graphql, rest, har
-    source_url: Optional[str] = None
+    source_url: str | None = None
 
-    def get_endpoint_by_name(self, name: str) -> Optional[Endpoint]:
+    def get_endpoint_by_name(self, name: str) -> Endpoint | None:
         """Find endpoint by tool name."""
         for endpoint in self.endpoints:
             if endpoint.tool_name == name:
                 return endpoint
         return None
 
-    def get_endpoints_by_tag(self, tag: str) -> List[Endpoint]:
+    def get_endpoints_by_tag(self, tag: str) -> list[Endpoint]:
         """Get all endpoints with specific tag."""
         return [e for e in self.endpoints if tag in e.tags]
 
     @property
-    def primary_server(self) -> Optional[str]:
+    def primary_server(self) -> str | None:
         """Get primary server URL."""
         if self.base_url:
             return self.base_url
