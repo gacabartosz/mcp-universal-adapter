@@ -33,25 +33,58 @@ def generate(
     """Generate MCP server from API specification.
 
     Examples:
-        mcp-adapt https://api.example.com/openapi.json
-        mcp-adapt --preset stripe --output stripe-mcp
-        mcp-adapt ./api-spec.yaml --language typescript
+        mcp-adapt generate https://api.example.com/openapi.json
+        mcp-adapt generate ./api-spec.yaml --output my-server
+        mcp-adapt generate https://jsonplaceholder.typicode.com/openapi.json
     """
-    console.print(Panel.fit(
-        "[bold yellow]⚠️  Feature in Development[/bold yellow]\n\n"
-        "MCP server generation is currently being implemented.\n"
-        f"Source: {source}\n"
-        f"Output: {output}\n"
-        f"Language: {language}",
-        title="MCP Universal Adapter",
-    ))
+    import asyncio
+    from mcp_adapter.parsers import OpenAPIParser
+    from mcp_adapter.generators import PythonGenerator
 
-    # TODO: Implement generation logic
-    # 1. Detect source type (URL, file, preset)
-    # 2. Parse API specification
-    # 3. Generate MCP server code
-    # 4. Write to output directory
-    # 5. Run validation tests
+    console.print(f"\n[bold cyan]🔧 MCP Universal Adapter[/bold cyan]")
+    console.print(f"Source: {source}")
+    console.print(f"Output: {output}")
+    console.print(f"Language: {language}\n")
+
+    try:
+        # Step 1: Parse API specification
+        console.print("[bold]Step 1:[/bold] Parsing API specification...")
+        parser = OpenAPIParser(source)
+        api_spec = asyncio.run(parser.parse())
+
+        console.print(f"✅ Parsed: {api_spec.name} v{api_spec.version}")
+        console.print(f"   Endpoints: {len(api_spec.endpoints)}")
+        console.print(f"   Auth: {api_spec.auth.type if api_spec.auth else 'None'}\n")
+
+        # Step 2: Generate MCP server
+        console.print("[bold]Step 2:[/bold] Generating MCP server...")
+
+        if language.lower() == "python":
+            generator = PythonGenerator(api_spec)
+        else:
+            console.print(f"[red]Error:[/red] Unsupported language: {language}")
+            console.print("Currently supported: python")
+            return
+
+        generator.generate(output)
+
+        # Step 3: Success!
+        console.print(f"\n[bold green]✨ Success![/bold green]")
+        console.print(f"\nGenerated MCP server in: [cyan]{output}[/cyan]")
+        console.print("\n[bold]Next steps:[/bold]")
+        console.print(f"  1. cd {output}")
+        console.print("  2. pip install -e .")
+        if api_spec.auth:
+            console.print("  3. Copy .env.example to .env and add your credentials")
+            console.print("  4. python server.py")
+        else:
+            console.print("  3. python server.py")
+
+    except Exception as e:
+        console.print(f"\n[red]❌ Error:[/red] {str(e)}")
+        import traceback
+        console.print(f"\n[dim]{traceback.format_exc()}[/dim]")
+        raise typer.Exit(code=1)
 
 
 @app.command()

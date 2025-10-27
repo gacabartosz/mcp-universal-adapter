@@ -1,18 +1,18 @@
 """Base generator interface for all target languages."""
 
 from abc import ABC, abstractmethod
-from typing import Dict, Any
 from pathlib import Path
+from mcp_adapter.models import NormalizedAPISpec
 
 
 class BaseGenerator(ABC):
     """Abstract base class for MCP server generators."""
 
-    def __init__(self, api_spec: Dict[str, Any]):
+    def __init__(self, api_spec: NormalizedAPISpec):
         """Initialize generator with API specification.
 
         Args:
-            api_spec: Parsed API specification dictionary
+            api_spec: Normalized API specification
         """
         self.api_spec = api_spec
 
@@ -33,3 +33,9 @@ class BaseGenerator(ABC):
             True if spec is valid, False otherwise
         """
         pass
+
+
+class GeneratorError(Exception):
+    """Base exception for generator errors."""
+
+    pass
