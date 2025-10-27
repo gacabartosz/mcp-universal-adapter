@@ -27,11 +27,13 @@ def version():
 @app.command()
 def generate(
     source: str = typer.Argument(..., help="API specification URL or file path"),
-    output: Path = typer.Option("./generated_server", "--output", "-o", help="Output directory"),  # noqa: B008
-    language: str = typer.Option(
+    output: Path = typer.Option(  # noqa: B008
+        "./generated_server", "--output", "-o", help="Output directory"
+    ),
+    language: str = typer.Option(  # noqa: B008
         "python", "--language", "-l", help="Target language (python/typescript)"
     ),
-    preset: str = typer.Option(None, "--preset", "-p", help="Use preset configuration"),
+    preset: str = typer.Option(None, "--preset", "-p", help="Use preset configuration"),  # noqa: B008
 ):
     """Generate MCP server from API specification.
 

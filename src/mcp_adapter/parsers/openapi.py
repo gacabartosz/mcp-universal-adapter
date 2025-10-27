@@ -229,6 +229,16 @@ class OpenAPIParser(BaseParser):
             example=param.get("example") or schema.get("example"),
         )
 
+    def _resolve_ref(self, ref: str) -> dict[str, Any]:
+        """Resolve $ref to actual schema from components."""
+        assert self.spec is not None
+        # Handle format: #/components/schemas/Pet
+        if ref.startswith("#/components/schemas/"):
+            schema_name = ref.split("/")[-1]
+            result = self.spec.get("components", {}).get("schemas", {}).get(schema_name, {})
+            return dict(result)  # Convert to dict to satisfy mypy
+        return {}
+
     def _build_request_body(self, request_body: dict[str, Any]) -> SchemaModel | None:
         """Build SchemaModel from OpenAPI requestBody."""
         content = request_body.get("content", {})
@@ -241,6 +251,11 @@ class OpenAPIParser(BaseParser):
             return None
 
         schema = media_type.get("schema", {})
+
+        # Resolve $ref if present
+        if "$ref" in schema:
+            schema = self._resolve_ref(schema["$ref"])
+
         return self._build_schema_model("RequestBody", schema)
 
     def _build_response_schema(self, response: dict[str, Any]) -> SchemaModel | None:

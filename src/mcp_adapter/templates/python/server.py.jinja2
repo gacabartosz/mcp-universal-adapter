@@ -116,14 +116,30 @@ async def list_tools() -> list[Tool]:
 
 {% for endpoint in endpoints %}
 async def {{ endpoint.tool_name }}(
+    {% set required_params = [] %}
+    {% set optional_params = [] %}
     {% for param in endpoint.parameters %}
-    {{ param.name }}: {{ param.type }}{% if not param.required %} = {{ param.default if param.default is not none else 'None' }}{% endif %},
+        {% if param.required %}
+            {% set _ = required_params.append((param.name, param.type, None)) %}
+        {% else %}
+            {% set _ = optional_params.append((param.name, param.type, param.default if param.default is not none else 'None')) %}
+        {% endif %}
     {% endfor %}
     {% if endpoint.request_body %}
-    {% for prop_name, prop in endpoint.request_body.properties.items() %}
-    {{ prop_name }}: {{ prop.type }}{% if prop_name not in endpoint.request_body.required %} = {{ prop.default if prop.default is not none else 'None' }}{% endif %},
-    {% endfor %}
+        {% for prop_name, prop in endpoint.request_body.properties.items() %}
+            {% if prop_name in endpoint.request_body.required %}
+                {% set _ = required_params.append((prop_name, prop.type, None)) %}
+            {% else %}
+                {% set _ = optional_params.append((prop_name, prop.type, prop.default if prop.default is not none else 'None')) %}
+            {% endif %}
+        {% endfor %}
     {% endif %}
+    {% for name, ptype, _ in required_params %}
+    {{ name }}: {{ ptype }},
+    {% endfor %}
+    {% for name, ptype, default in optional_params %}
+    {{ name }}: {{ ptype }} = {{ default }},
+    {% endfor %}
 ) -> Dict[str, Any]:
     """
     {{ endpoint.summary or endpoint.description or (endpoint.method.value ~ " " ~ endpoint.path) }}

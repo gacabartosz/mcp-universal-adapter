@@ -123,8 +123,14 @@ class Endpoint(BaseModel):
             DELETE /users/{id} -> delete_user
         """
         if self.operation_id:
-            # Use OpenAPI operationId if available
-            return self.operation_id.lower().replace(" ", "_")
+            # Use OpenAPI operationId if available - convert camelCase to snake_case
+            import re
+
+            name = self.operation_id
+            # Insert underscore before uppercase letters (except first)
+            name = re.sub("(.)([A-Z][a-z]+)", r"\1_\2", name)
+            name = re.sub("([a-z0-9])([A-Z])", r"\1_\2", name)
+            return name.lower().replace(" ", "_")
 
         # Generate from method + path
         path_parts = [p for p in self.path.split("/") if p and not p.startswith("{")]
