@@ -1,0 +1,141 @@
+[tool.poetry]
+name = "mcp-universal-adapter"
+version = "0.0.1"
+description = "Transform any API into a fully functional MCP server automatically"
+authors = ["Bartosz Gaca <gaca.bartosz@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+homepage = "https://github.com/gacabartosz/mcp-universal-adapter"
+repository = "https://github.com/gacabartosz/mcp-universal-adapter"
+documentation = "https://github.com/gacabartosz/mcp-universal-adapter/docs"
+keywords = [
+    "mcp",
+    "model-context-protocol",
+    "api",
+    "openapi",
+    "graphql",
+    "automation",
+    "ai",
+    "llm",
+    "adapter",
+    "code-generation"
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Code Generators",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+packages = [{include = "mcp_adapter", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+
+# Core dependencies
+typer = "^0.9.0"
+pydantic = "^2.5.0"
+jinja2 = "^3.1.0"
+pyyaml = "^6.0.1"
+httpx = "^0.26.0"
+
+# API parsing
+openapi-parser = "^1.1.0"
+graphql-core = "^3.2.0"
+python-dotenv = "^1.0.0"
+
+# Rich CLI output
+rich = "^13.7.0"
+
+[tool.poetry.group.dev.dependencies]
+# Testing
+pytest = "^8.0.0"
+pytest-asyncio = "^0.23.0"
+pytest-cov = "^4.1.0"
+pytest-mock = "^3.12.0"
+
+# Linting and formatting
+black = "^24.1.0"
+ruff = "^0.2.0"
+mypy = "^1.8.0"
+isort = "^5.13.0"
+
+# Type stubs
+types-pyyaml = "^6.0.12"
+types-requests = "^2.31.0"
+
+# Documentation
+mkdocs = "^1.5.0"
+mkdocs-material = "^9.5.0"
+mkdocstrings = {extras = ["python"], version = "^0.24.0"}
+
+[tool.poetry.scripts]
+mcp-adapt = "mcp_adapter.cli:app"
+
+[tool.black]
+line-length = 100
+target-version = ['py310', 'py311', 'py312']
+include = '\.pyi?$'
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "C",   # flake8-comprehensions
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+]
+ignore = [
+    "E501",  # line too long (black handles this)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = false  # Relaxed for early development
+check_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-ra -q --strict-markers --cov=mcp_adapter --cov-report=term-missing --cov-report=html"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["src/mcp_adapter"]
+omit = [
+    "*/tests/*",
+    "*/test_*.py",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "if __name__ == .__main__.:",
+    "if TYPE_CHECKING:",
+    "@abstractmethod",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
