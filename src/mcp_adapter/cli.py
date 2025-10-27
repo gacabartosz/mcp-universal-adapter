@@ -33,7 +33,9 @@ def generate(
     language: str = typer.Option(  # noqa: B008
         "python", "--language", "-l", help="Target language (python/typescript)"
     ),
-    preset: str = typer.Option(None, "--preset", "-p", help="Use preset configuration"),  # noqa: B008
+    preset: str = typer.Option(
+        None, "--preset", "-p", help="Use preset configuration"
+    ),  # noqa: B008
 ):
     """Generate MCP server from API specification.
 
@@ -45,7 +47,7 @@ def generate(
         mcp-adapt generate ./api-spec.yaml --output my-server
         mcp-adapt generate https://jsonplaceholder.typicode.com/openapi.json
     """
-    output = Path(output)
+    output_path = Path(output)
     import asyncio
 
     from mcp_adapter.generators import PythonGenerator
@@ -76,7 +78,7 @@ def generate(
             console.print("Currently supported: python")
             return
 
-        generator.generate(output)
+        generator.generate(output_path)
 
         # Step 3: Success!
         console.print("\n[bold green]✨ Success![/bold green]")
@@ -132,7 +134,7 @@ def discover(
     Example:
         mcp-adapt discover https://api.example.com
     """
-    output = Path(output)
+    output_path = Path(output)  # noqa: F841 - will be used when discovery implemented
     console.print(
         Panel.fit(
             "[bold yellow]⚠️  Feature in Development[/bold yellow]\n\n"
