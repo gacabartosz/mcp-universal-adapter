@@ -44,7 +44,8 @@ pyyaml = "^6.0.1"
 httpx = "^0.26.0"
 
 # API parsing
-openapi-parser = "^1.1.0"
+# Note: Using built-in yaml/json parsing instead of openapi-parser (doesn't exist in PyPI)
+# For advanced OpenAPI features, can add: prance = "^23.6.0" or openapi-spec-validator = "^0.7.0"
 graphql-core = "^3.2.0"
 python-dotenv = "^1.0.0"
 

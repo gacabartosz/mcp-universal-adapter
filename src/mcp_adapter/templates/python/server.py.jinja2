@@ -13,8 +13,12 @@ import os
 import asyncio
 from typing import Any, Dict, Optional
 import httpx
+from dotenv import load_dotenv
 from mcp.server import Server
 from mcp.types import Tool, TextContent
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Initialize MCP server
 server = Server("{{ api_spec.name|lower|replace(' ', '-') }}-mcp")
@@ -23,7 +27,7 @@ server = Server("{{ api_spec.name|lower|replace(' ', '-') }}-mcp")
 BASE_URL = os.getenv("API_BASE_URL", "{{ base_url }}")
 {% if has_auth %}
 {% if auth_type.value == "api_key" %}
-{{ auth_name }} = os.getenv("{{ auth_name }}", "")
+API_KEY = os.getenv("{{ auth_name|upper }}", "")
 {% elif auth_type.value == "bearer" %}
 BEARER_TOKEN = os.getenv("BEARER_TOKEN", "")
 {% elif auth_type.value == "basic" %}
@@ -42,8 +46,8 @@ def get_headers() -> Dict[str, str]:
 
     {% if has_auth %}
     {% if auth_type.value == "api_key" %}
-    if {{ auth_name }}:
-        headers["{{ auth_name }}"] = {{ auth_name }}
+    if API_KEY:
+        headers["{{ auth_name }}"] = API_KEY
     {% elif auth_type.value == "bearer" %}
     if BEARER_TOKEN:
         headers["Authorization"] = f"Bearer {BEARER_TOKEN}"
@@ -226,8 +230,8 @@ async def main():
     """Run the MCP server."""
     {% if has_auth %}
     {% if auth_type.value == "api_key" %}
-    if not {{ auth_name }}:
-        print("⚠️  Warning: {{ auth_name }} not set. Set it in environment or .env file.")
+    if not API_KEY:
+        print("⚠️  Warning: {{ auth_name|upper }} not set. Set it in environment or .env file.")
     {% elif auth_type.value == "bearer" %}
     if not BEARER_TOKEN:
         print("⚠️  Warning: BEARER_TOKEN not set. Set it in environment or .env file.")
