@@ -26,8 +26,8 @@ def version():
 
 @app.command()
 def generate(
-    source: str = typer.Argument(..., help="API specification URL or file path"),
-    output: Path = typer.Option(  # noqa: B008
+    source: str,
+    output: str = typer.Option(  # noqa: B008
         "./generated_server", "--output", "-o", help="Output directory"
     ),
     language: str = typer.Option(  # noqa: B008
@@ -37,11 +37,15 @@ def generate(
 ):
     """Generate MCP server from API specification.
 
+    Args:
+        source: API specification URL or file path
+
     Examples:
         mcp-adapt generate https://api.example.com/openapi.json
         mcp-adapt generate ./api-spec.yaml --output my-server
         mcp-adapt generate https://jsonplaceholder.typicode.com/openapi.json
     """
+    output = Path(output)
     import asyncio
 
     from mcp_adapter.generators import PythonGenerator
@@ -115,16 +119,20 @@ def presets():
 
 @app.command()
 def discover(
-    base_url: str = typer.Argument(..., help="Base URL of the API to discover"),
-    output: Path = typer.Option(  # noqa: B008
+    base_url: str,
+    output: str = typer.Option(  # noqa: B008
         "./api_spec.yaml", "--output", "-o", help="Output file for discovered spec"
     ),
 ):
     """Discover API endpoints from base URL.
 
+    Args:
+        base_url: Base URL of the API to discover
+
     Example:
         mcp-adapt discover https://api.example.com
     """
+    output = Path(output)
     console.print(
         Panel.fit(
             "[bold yellow]⚠️  Feature in Development[/bold yellow]\n\n"

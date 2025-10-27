@@ -75,12 +75,12 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     {% for param in endpoint.parameters %}
                     "{{ param.name }}": {
-                        "type": "{{ param.schema.type if param.schema else param.type }}",
+                        "type": "{{ (param.param_schema.type if param.param_schema else param.type) | to_json_type }}",
                         {% if param.description %}
                         "description": "{{ param.description }}",
                         {% endif %}
-                        {% if param.schema and param.schema.enum %}
-                        "enum": {{ param.schema.enum }},
+                        {% if param.param_schema and param.param_schema.enum %}
+                        "enum": {{ param.param_schema.enum }},
                         {% endif %}
                         {% if param.default is not none %}
                         "default": {{ param.default }},
@@ -90,7 +90,7 @@ async def list_tools() -> list[Tool]:
                     {% if endpoint.request_body %}
                     {% for prop_name, prop in endpoint.request_body.properties.items() %}
                     "{{ prop_name }}": {
-                        "type": "{{ prop.type }}",
+                        "type": "{{ prop.type | to_json_type }}",
                         {% if prop.description %}
                         "description": "{{ prop.description }}",
                         {% endif %}

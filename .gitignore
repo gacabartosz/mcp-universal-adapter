@@ -59,3 +59,4 @@ docs/_build/
 *.tmp
 *.bak
 .cache/
+generated_server/

@@ -26,6 +26,7 @@ class PythonGenerator(BaseGenerator):
         )
         # Add custom filters
         self.env.filters["to_python_name"] = self._to_python_name
+        self.env.filters["to_json_type"] = self._to_json_type
 
     def validate_spec(self) -> bool:
         """Validate API spec has required information."""
@@ -155,3 +156,23 @@ class PythonGenerator(BaseGenerator):
         if name and name[0].isdigit():
             name = "api_" + name
         return name or "api"
+
+    def _to_json_type(self, type_str: str) -> str:
+        """Convert Python/OpenAPI type to JSON Schema type."""
+        type_map = {
+            # Python types
+            "str": "string",
+            "int": "integer",
+            "float": "number",
+            "bool": "boolean",
+            "list": "array",
+            "dict": "object",
+            # OpenAPI types (already correct)
+            "string": "string",
+            "integer": "integer",
+            "number": "number",
+            "boolean": "boolean",
+            "array": "array",
+            "object": "object",
+        }
+        return type_map.get(type_str, "string")  # Default to string if unknown
